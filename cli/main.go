@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/addigy/AddigySDK/sdk"
+	"github.com/addigy/api-client-go/sdk"
 	"os"
 )
 
@@ -77,6 +77,7 @@ func handleAlerts() {
 	subcommand.PrintDefaults()
 }
 
+// todo "Something went wrong, we are looking into this issue" on some accounts.
 // addigy applications -l
 func handleInstalledApplications() {
 	subcommand := flag.NewFlagSet("applications", flag.ExitOnError)
@@ -105,6 +106,7 @@ func handleInstalledApplications() {
 	subcommand.PrintDefaults()
 }
 
+// todo Bad data? software_icon is an array.
 // addigy public-software -l
 func handlePublicSoftwareItems() {
 	subcommand := flag.NewFlagSet("public-software", flag.ExitOnError)
@@ -116,7 +118,6 @@ func handlePublicSoftwareItems() {
 	}
 
 	if *list {
-		// todo Ask Javi why software_icon is an array. Throwing error.
 		software, err := client.GetPublicSoftwareItems()
 		if err != nil {
 			fmt.Println(err)
@@ -134,6 +135,7 @@ func handlePublicSoftwareItems() {
 	subcommand.PrintDefaults()
 }
 
+// todo time.Time parsing error during json.Unmarshall.
 // addigy custom-software -l -instructionID "" -identifier ""
 // addigy custom-software -n -base-identifier "" -version "" -installation-script "" -condition "" -remove-script ""
 // addigy custom-software -u -identifier "" -version "" -installation-script "" -condition "" -remove-script ""

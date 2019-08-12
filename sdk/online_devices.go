@@ -36,7 +36,7 @@ type Device struct {
 	BatteryCapacityLossPercentage  int         `json:"Battery Capacity Loss Percentage"`
 	HardwareModel                  string      `json:"Hardware Model"`
 	ClientIP                       string      `json:"client_ip"`
-	FreeDiskSpaceGB                int         `json:"Free Disk Space (GB)"`
+	FreeDiskSpaceGB                float32     `json:"Free Disk Space (GB)"`
 	BatteryCharging                bool        `json:"Battery Charging"`
 	DisplayOn                      bool        `json:"Display On"`
 	WifiMACAddress                 interface{} `json:"Wifi MAC Address"`
@@ -44,7 +44,7 @@ type Device struct {
 	CurrentUser                    string      `json:"Current User"`
 	ScreenConnectSessionID         string      `json:"ScreenConnect SessionId"`
 	LastRebootTimestamp            float64     `json:"Last Reboot Timestamp"`
-	TotalDiskSpaceGB               int         `json:"Total Disk Space (GB)"`
+	TotalDiskSpaceGB               float32     `json:"Total Disk Space (GB)"`
 	LastOnline                     int         `json:"last_online"`
 	Agentid                        string      `json:"agentid"`
 	XCodeInstalled                 bool        `json:"XCode Installed"`

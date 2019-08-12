@@ -44,6 +44,10 @@ func (addigy AddigyClient) GetInstalledApplications() ([]InstalledApplications, 
 		return nil, fmt.Errorf("error occurred reading response body: %s", err)
 	}
 
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("response from server: %s", string(body[:]))
+	}
+
 	var applications []InstalledApplications
 	err = json.Unmarshal(body, &applications)
 	if err != nil {

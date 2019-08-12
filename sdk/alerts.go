@@ -13,7 +13,7 @@ type Alert struct {
 	Valuetype      string   `json:"valuetype"`
 	FactName       string   `json:"fact_name"`
 	FactIdentifier string   `json:"fact_identifier"`
-	Value          bool     `json:"value"`
+	Value          interface{}     `json:"value"`
 	Name           string   `json:"name"`
 	Remenabled     bool     `json:"remenabled"`
 	Agentid        string   `json:"agentid"`

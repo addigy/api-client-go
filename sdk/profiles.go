@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 type Domain struct {
@@ -24,6 +25,11 @@ type Download struct {
 	ID       string `json:"id"`
 	Md5Hash  string `json:"md5_hash"`
 	Provider string `json:"provider"`
+	UserEmail string `json:"user_email"`
+	Size int64 `json:"size"`
+	OrgID string `json:"orgid"`
+	ContentType string `json:"content_type"`
+	Created time.Time `json:"created"`
 }
 
 type FirewallInstruction struct {
