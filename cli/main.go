@@ -639,7 +639,17 @@ func handleSystemEvents() {
 }
 
 func listSubcommands() {
-	fmt.Println("Subcommand required. Possible subcommands: alerts, applications, public-software, custom-software, devices, " +
-		"commands, upload, maintenance, policies, " +
-		"profiles, system-events.")
+	fmt.Println("Subcommand required. " +
+		"\n\nPossible subcommands: " +
+		"\nalerts" +
+		"\napplications" +
+		"\npublic-software" +
+		"\ncustom-software" +
+		"\ndevices" +
+		"\ncommands " +
+		"\nupload" +
+		"\nmaintenance" +
+		"\npolicies" +
+		"\nprofiles" +
+		"\nsystem-events")
 }
