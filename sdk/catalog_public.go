@@ -1,5 +1,6 @@
 package sdk
 
+//todo rename this file public-software or rename custom-software, whatever you decide make sure all the files follow the same case pattern (snake_case, dash-case)
 import (
 	"encoding/json"
 	"fmt"
@@ -36,8 +37,9 @@ type SoftwareItem struct {
 }
 
 // GET api/catalog/public
-// todo cannot unmarshal array into Go struct field SoftwareItem.software_icon of type main.SoftwareIcon
-// Default value for software_icon is [], otherwise it's an object. How to handle both for marshalling?
+
+//Jake: todo I removed the software in the db, its working fine now. Idk how that software was created
+// Steve: todo cannot unmarshal array into Go struct field SoftwareItem.software_icon of type main.SoftwareIcon
 func (addigy AddigyClient) GetPublicSoftwareItems() ([]SoftwareItem, error) {
 	endpoint := addigy.BaseURL + "/api/catalog/public"
 	req, err := http.NewRequest("GET", endpoint, nil)

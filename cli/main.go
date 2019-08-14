@@ -10,7 +10,7 @@ import (
 
 var clientID = os.Getenv("AddigyClientID")
 var clientSecret = os.Getenv("AddigyClientSecret")
-var client = sdk.NewAddigyClient(clientID, clientSecret)
+var client = sdk.NewAddigyClient(clientID, clientSecret)	//todo: pass in realm with os.Getenv("Realm")
 
 func main() {
 	if len(os.Args) < 2 {
@@ -65,6 +65,7 @@ func handleAlerts() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+		//todo create a function called printJson or something that does this for you and call this in all the handlers
 		prettyAlerts, err := json.MarshalIndent(alerts, "", "  ")
 		if err != nil {
 			fmt.Println(err)
@@ -77,7 +78,8 @@ func handleAlerts() {
 	subcommand.PrintDefaults()
 }
 
-// todo "Something went wrong, we are looking into this issue" on some accounts.
+//Jake: The org that we're testing with has a lot of records which causes this to break, we're aware of it but theres nothing we can do right now so just leave it for now
+// Steve: todo "Something went wrong, we are looking into this issue" on some accounts.
 // addigy applications -l
 func handleInstalledApplications() {
 	subcommand := flag.NewFlagSet("applications", flag.ExitOnError)
@@ -106,7 +108,7 @@ func handleInstalledApplications() {
 	subcommand.PrintDefaults()
 }
 
-// todo Bad data? software_icon is an array.
+// todo Bad data? software_icon is an array.		Just use an interface for now
 // addigy public-software -l
 func handlePublicSoftwareItems() {
 	subcommand := flag.NewFlagSet("public-software", flag.ExitOnError)
@@ -151,7 +153,7 @@ func handleCustomSoftware() {
 
 	// update related flags
 	update := subcommand.Bool("u", false, "Provide -u flag to update an existing software item. Requires -identifier and -version flags. Optionally accepts -installation-script, -condition, and -remove-script flags.")
-
+	//todo --base-identifier is required, not -identifier
 	// shared flags
 	identifier := subcommand.String("identifier", "", "The identifier of a custom software item. This is required for creating a new version of an existing software item.")
 	version := subcommand.String("version", "", "The version of the custom software. This required for both creating new and updating existing software items.")
@@ -164,6 +166,7 @@ func handleCustomSoftware() {
 		os.Exit(1)
 	}
 
+	//todo just have on if *list and check the condition in there
 	if *list && *instructionID == "" {
 		software, err := client.GetCustomSoftware(*identifier)
 		if err != nil {
@@ -193,7 +196,7 @@ func handleCustomSoftware() {
 		fmt.Println(string(prettySoftware))
 		os.Exit(0)
 	}
-	//todo ask Javi about downloads
+	//todo check create first, then check if baseIdentifier and version are not empty, if they are exit with a message saying 'missing x'
 	if *create && *baseIdentifier != "" && *version != "" {
 		software, err := client.CreateCustomSoftware(*baseIdentifier, *version, []sdk.Download{}, *installationScript, *conditionScript, *removeScript)
 		if err != nil {
@@ -209,6 +212,7 @@ func handleCustomSoftware() {
 		os.Exit(0)
 	}
 
+	//todo see above comment
 	if *update && *identifier != "" && *version != "" {
 		software, err := client.UpdateCustomSoftware(*identifier, *version, []sdk.Download{}, *installationScript, *conditionScript, *removeScript)
 		if err != nil {
@@ -232,13 +236,14 @@ func handleCustomSoftware() {
 func handleDevices() {
 	subcommand := flag.NewFlagSet("devices", flag.ExitOnError)
 	list := subcommand.Bool("l", false, "Provide -l flag to get list of all devices. Optionally accepts -online flag.")
-	online := subcommand.Bool("online", false, "Returns lists of online devices. (Optional)")
+	online := subcommand.Bool("online", false, "Returns lists of online devices. (Optional)") //todo if you say this flag is optional here ^ then you dont need (Optional) this goes for all other flags too. Make sure you have a design standard for how the commands should be printed
 	err := subcommand.Parse(os.Args[2:])
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
+	//todo check list only once
 	if *list && !*online {
 		devices, err := client.GetAllDevices()
 		if err != nil {
@@ -291,6 +296,7 @@ func handleCommands() {
 	}
 
 	agentIDs := subcommand.Args()
+	//todo check shouldRun and if its true check if cmd != "" and agentids. return error message if they are empty
 	if *shouldRun && *cmd != "" && len(agentIDs) >= 1 {
 		res, err := client.RunCommandOnDevices(agentIDs, *cmd)
 		if err != nil {
@@ -306,6 +312,7 @@ func handleCommands() {
 		os.Exit(0)
 	}
 
+	//todo see above
 	if *shouldGetOutput && *actionID != "" && len(agentIDs) == 1 {
 		res, err := client.GetCommandOutput(*actionID, agentIDs[0])
 		if err != nil {

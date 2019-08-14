@@ -9,27 +9,28 @@ import (
 )
 
 type Alert struct {
-	ID             string   `json:"_id"`
-	Valuetype      string   `json:"valuetype"`
-	FactName       string   `json:"fact_name"`
-	FactIdentifier string   `json:"fact_identifier"`
-	Value          interface{}     `json:"value"`
-	Name           string   `json:"name"`
-	Remenabled     bool     `json:"remenabled"`
-	Agentid        string   `json:"agentid"`
-	CreatedOn      float32  `json:"created_on"`
-	Level          string   `json:"level"`
-	Remtime        int      `json:"remtime"`
-	Category       string   `json:"category"`
-	Emails         []string `json:"emails"`
-	Status         string   `json:"status"`
-	Orgid          string   `json:"orgid"`
-	Selector       string   `json:"selector"`
+	ID             string      `json:"_id"`
+	Valuetype      string      `json:"valuetype"`
+	FactName       string      `json:"fact_name"`
+	FactIdentifier string      `json:"fact_identifier"`
+	Value          interface{} `json:"value"`
+	Name           string      `json:"name"`
+	Remenabled     bool        `json:"remenabled"`
+	Agentid        string      `json:"agentid"`
+	CreatedOn      float32     `json:"created_on"`
+	Level          string      `json:"level"`
+	Remtime        int         `json:"remtime"`
+	Category       string      `json:"category"`
+	Emails         []string    `json:"emails"`
+	Status         string      `json:"status"`
+	Orgid          string      `json:"orgid"`
+	Selector       string      `json:"selector"`
 }
 
 // GET api/alerts
 
 func (addigy AddigyClient) GetAlerts(status string, perPage int, page int) ([]Alert, error) {
+	//todo: use a method in AddigyClient to build the url and pass in the GET params
 	endpoint := addigy.BaseURL + "/api/alerts?"
 	status = strings.TrimSpace(status)
 	if status != "" {
@@ -44,6 +45,7 @@ func (addigy AddigyClient) GetAlerts(status string, perPage int, page int) ([]Al
 		endpoint = fmt.Sprintf("%spage=%d", endpoint, page)
 	}
 
+	//todo: move everything required to make a request to a new method inside of AddigyClient and call that function in all these
 	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
 		// Handle error from creating new request.
@@ -59,6 +61,7 @@ func (addigy AddigyClient) GetAlerts(status string, perPage int, page int) ([]Al
 		return nil, fmt.Errorf("error occurred performing HTTP request: %s", err)
 	}
 
+	//todo: check if the status is != http.StatusOk and return a string of the body
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -67,7 +70,7 @@ func (addigy AddigyClient) GetAlerts(status string, perPage int, page int) ([]Al
 	}
 
 	var alerts []Alert
-	err = json.Unmarshal(body, &alerts)
+	err = json.Unmarshal(body, &alerts)	//todo when moving this to a method, unmarshal the body to the responseObj that was passed in
 	if err != nil {
 		// Handle error from unmarshalling.
 		return nil, fmt.Errorf("error occurred unmarshalling response body: %s", err)

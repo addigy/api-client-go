@@ -96,8 +96,14 @@ func (addigy AddigyClient) GetSpecificCustomSoftware(instructionID string) (*Sof
 func (addigy AddigyClient) CreateCustomSoftware(baseIdentifier string, version string, downloads []Download,
 	installationScript string, condition string, removeScript string) (*SoftwareItem, error) {
 	endpoint := addigy.BaseURL + "/api/custom-software"
-	payload := CustomSoftwareParameters{BaseIdentifier: baseIdentifier, Version: version,
-		Downloads: downloads, InstallationScript: installationScript, Condition: condition, RemoveScript: removeScript}
+	payload := &CustomSoftwareParameters{
+		BaseIdentifier: baseIdentifier,
+		Version: version,
+		Downloads: downloads,
+		InstallationScript: installationScript,
+		Condition: condition,
+		RemoveScript: removeScript,
+	}
 	jsonPayload, _ := json.Marshal(payload)
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonPayload))
 	if err != nil {
@@ -139,8 +145,14 @@ func (addigy AddigyClient) CreateCustomSoftware(baseIdentifier string, version s
 func (addigy AddigyClient) UpdateCustomSoftware(identifier string, version string, downloads []Download,
 	installationScript string, condition string, removeScript string) (*SoftwareItem, error) {
 	endpoint := addigy.BaseURL + "/api/custom-software"
-	payload := CustomSoftwareParameters{Identifier: identifier, Version: version,
-		Downloads: downloads, InstallationScript: installationScript, Condition: condition, RemoveScript: removeScript}
+	payload := &CustomSoftwareParameters{
+		Identifier: identifier,
+		Version: version,
+		Downloads: downloads,
+		InstallationScript: installationScript,
+		Condition: condition,
+		RemoveScript: removeScript,
+	}
 	jsonPayload, _ := json.Marshal(payload)
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonPayload))
 	if err != nil {

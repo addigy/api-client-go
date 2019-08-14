@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 )
+//Jake todo move all this into the devices file
+//Jake todo: I would remove the whole struct and just have map[string]interface since these devices now include custom facts too, no way you can account for every field
 // todo clarify type assumptions with Javi
 // LastCloudBackupDate, TimeMachineLastBackupDate, DaysSinceLastCloudBackup, TimeMachineDaysSinceLastBackup, BatteryCycles, CrashplanDaysSinceLastBackup, WifiMACAddress, DisplaysSerialNumber
 type Device struct {
