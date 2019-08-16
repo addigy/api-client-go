@@ -1,9 +1,7 @@
 package sdk
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -27,42 +25,26 @@ type Maintenance struct {
 
 // GET api/maintenance
 func (addigy AddigyClient) GetMaintenanceItems(perPage int, page int) ([]Maintenance, error) {
-	endpoint := addigy.BaseURL + "/api/maintenance?"
+	params := make(map[string]interface{})
 	if perPage != 0 {
-		endpoint = fmt.Sprintf("%sper_page=%d&", endpoint, perPage)
+		params["per_page"] = perPage
 	}
 
 	if page != 0 {
-		endpoint = fmt.Sprintf("%spage=%d", endpoint, page)
+		params["page"] = page
 	}
 
-	req, err := http.NewRequest("GET", endpoint, nil)
+	url := addigy.buildURL("/api/maintenance", params)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		// Handle error from creating new request.
 		return nil, fmt.Errorf("error occurred creating new request: %s", err)
 	}
 
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("client-id", addigy.ClientID)
-	req.Header.Add("client-secret", addigy.ClientSecret)
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		// Handle error from client performing HTTP request.
-		return nil, fmt.Errorf("error occurred performing HTTP request: %s", err)
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		// Handler error from reading response.
-		return nil, fmt.Errorf("error occurred reading response body: %s", err)
-	}
-
 	var maintenance []Maintenance
-	err = json.Unmarshal(body, &maintenance)
+	err = addigy.do(req, &maintenance)
 	if err != nil {
-		// Handle error from unmarshalling.
-		return nil, fmt.Errorf("error occurred unmarshalling response body: %s", err)
+		return nil, fmt.Errorf("error occurred performing request: %s", err)
 	}
 
 	return maintenance, nil

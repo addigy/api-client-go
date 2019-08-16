@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -142,34 +141,17 @@ type Instruction struct {
 // GET api/profiles
 
 func (addigy AddigyClient) GetProfiles() ([]Instruction, error) {
-	endpoint := addigy.BaseURL + "/api/profiles"
-	req, err := http.NewRequest("GET", endpoint, nil)
+	url := addigy.buildURL("/api/profiles", nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		// Handle error from creating new request.
 		return nil, fmt.Errorf("error occurred creating new request: %s", err)
 	}
 
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("client-id", addigy.ClientID)
-	req.Header.Add("client-secret", addigy.ClientSecret)
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		// Handle error from client performing HTTP request.
-		return nil, fmt.Errorf("error occurred performing HTTP request: %s", err)
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		// Handler error from reading response.
-		return nil, fmt.Errorf("error occurred reading response body: %s", err)
-	}
-
 	var profiles []Instruction
-	err = json.Unmarshal(body, &profiles)
+	err = addigy.do(req, &profiles)
 	if err != nil {
-		// Handle error from unmarshalling.
-		return nil, fmt.Errorf("error occurred unmarshalling response body: %s", err)
+		return nil, fmt.Errorf("error occurred performing request: %s", err)
 	}
 
 	return profiles, nil
@@ -178,35 +160,18 @@ func (addigy AddigyClient) GetProfiles() ([]Instruction, error) {
 // POST api/profiles
 // todo Create Profile or Instruction?
 func (addigy AddigyClient) CreateProfile(profile Instruction) (*Instruction, error) {
-	endpoint := addigy.BaseURL + "/api/profiles"
+	url := addigy.buildURL("/api/profiles", nil)
 	jsonPayload, _ := json.Marshal(profile)
-	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonPayload))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		// Handle error from creating new request.
 		return nil, fmt.Errorf("error occurred creating new request: %s", err)
 	}
 
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("client-id", addigy.ClientID)
-	req.Header.Add("client-secret", addigy.ClientSecret)
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		// Handle error from client performing HTTP request.
-		return nil, fmt.Errorf("error occurred performing HTTP request: %s", err)
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		// Handler error from reading response.
-		return nil, fmt.Errorf("error occurred reading response body: %s", err)
-	}
-
 	var createdProfile *Instruction
-	err = json.Unmarshal(body, &createdProfile)
+	err = addigy.do(req, &createdProfile)
 	if err != nil {
-		// Handle error from unmarshalling.
-		return nil, fmt.Errorf("error occurred unmarshalling response body: %s", err)
+		return nil, fmt.Errorf("error occurred performing request: %s", err)
 	}
 
 	return createdProfile, nil
@@ -215,7 +180,7 @@ func (addigy AddigyClient) CreateProfile(profile Instruction) (*Instruction, err
 // PUT api/profiles
 //todo Update Profile or Instruction?
 func (addigy AddigyClient) UpdateProfile (instructionID string, payloads []Payload) (*Instruction, error) {
-	endpoint := addigy.BaseURL + "/api/profiles"
+	url := addigy.buildURL("/api/profiles", nil)
 	type UpdateRequest struct {
 		InstructionID string `json:"instruction_id"`
 		Payloads []Payload `json:"payloads"`
@@ -223,33 +188,16 @@ func (addigy AddigyClient) UpdateProfile (instructionID string, payloads []Paylo
 
 	updateRequest := UpdateRequest{InstructionID: instructionID, Payloads: payloads}
 	jsonPayload, _ := json.Marshal(updateRequest)
-	req, err := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonPayload))
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		// Handle error from creating new request.
 		return nil, fmt.Errorf("error occurred creating new request: %s", err)
 	}
 
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("client-id", addigy.ClientID)
-	req.Header.Add("client-secret", addigy.ClientSecret)
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		// Handle error from client performing HTTP request.
-		return nil, fmt.Errorf("error occurred performing HTTP request: %s", err)
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		// Handler error from reading response.
-		return nil, fmt.Errorf("error occurred reading response body: %s", err)
-	}
-
 	var updatedProfile *Instruction
-	err = json.Unmarshal(body, &updatedProfile)
+	err = addigy.do(req, &updatedProfile)
 	if err != nil {
-		// Handle error from unmarshalling.
-		return nil, fmt.Errorf("error occurred unmarshalling response body: %s", err)
+		return nil, fmt.Errorf("error occurred performing request: %s", err)
 	}
 
 	return updatedProfile, nil
@@ -258,28 +206,18 @@ func (addigy AddigyClient) UpdateProfile (instructionID string, payloads []Paylo
 // DELETE api/profiles
 
 func (addigy AddigyClient) DeleteProfile(instructionID string) error {
-	endpoint := addigy.BaseURL + "/api/profiles"
+	url := addigy.buildURL("/api/profiles", nil)
 	jsonPayload := []byte(fmt.Sprintf(`{ "instruction_id": "%s" }`, instructionID))
-	req, err := http.NewRequest("DELETE", endpoint, bytes.NewBuffer(jsonPayload))
+	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		// Handle error from creating new request.
 		return fmt.Errorf("error occurred creating new request: %s", err)
 	}
 
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("client-id", addigy.ClientID)
-	req.Header.Add("client-secret", addigy.ClientSecret)
-	res, err := http.DefaultClient.Do(req)
+	err = addigy.do(req, nil)
 	if err != nil {
-		// Handle error from client performing HTTP request.
-		return fmt.Errorf("error occurred performing HTTP request: %s", err)
+		return fmt.Errorf("error occurred performing request: %s", err)
 	}
 
-	defer res.Body.Close()
-	if res.StatusCode == 200 {
-		return nil
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
-	return fmt.Errorf("error: %s", string(body[:]))
+	return nil
 }

@@ -1,10 +1,7 @@
 package sdk
 
-//todo rename this file public-software or rename custom-software, whatever you decide make sure all the files follow the same case pattern (snake_case, dash-case)
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -38,37 +35,18 @@ type SoftwareItem struct {
 
 // GET api/catalog/public
 
-//Jake: todo I removed the software in the db, its working fine now. Idk how that software was created
-// Steve: todo cannot unmarshal array into Go struct field SoftwareItem.software_icon of type main.SoftwareIcon
 func (addigy AddigyClient) GetPublicSoftwareItems() ([]SoftwareItem, error) {
-	endpoint := addigy.BaseURL + "/api/catalog/public"
-	req, err := http.NewRequest("GET", endpoint, nil)
+	url := addigy.buildURL("/api/catalog/public", nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		// Handle error from creating new request.
 		return nil, fmt.Errorf("error occurred creating new request: %s", err)
 	}
 
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("client-id", addigy.ClientID)
-	req.Header.Add("client-secret", addigy.ClientSecret)
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		// Handle error from client performing HTTP request.
-		return nil, fmt.Errorf("error occurred performing HTTP request: %s", err)
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		// Handler error from reading response.
-		return nil, fmt.Errorf("error occurred reading response body: %s", err)
-	}
-
 	var software []SoftwareItem
-	err = json.Unmarshal(body, &software)
+	err = addigy.do(req, &software)
 	if err != nil {
-		// Handle error from unmarshalling.
-		return nil, fmt.Errorf("error occurred unmarshalling response body: %s", err)
+		return nil, fmt.Errorf("error occurred performing request: %s", err)
 	}
 
 	return software, nil

@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"mime/multipart"
@@ -20,27 +19,10 @@ func (addigy AddigyClient) GetFileUploadURL() (*string, error) {
 		return nil, fmt.Errorf("error occurred creating new request: %s", err)
 	}
 
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("client-id", addigy.ClientID)
-	req.Header.Add("client-secret", addigy.ClientSecret)
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		// Handle error from client performing HTTP request.
-		return nil, fmt.Errorf("error occurred performing HTTP request: %s", err)
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		// Handler error from reading response.
-		return nil, fmt.Errorf("error occurred reading response body: %s", err)
-	}
-
 	var url *string
-	err = json.Unmarshal(body, &url)
+	err = addigy.do(req, &url)
 	if err != nil {
-		// Handle error from unmarshalling.
-		return nil, fmt.Errorf("error occurred unmarshalling response body: %s", err)
+		return nil, fmt.Errorf("error occurred performing request: %s", err)
 	}
 
 	return url, nil
@@ -81,27 +63,10 @@ func (addigy AddigyClient) UploadFile(uploadURL string, filePath string) (*Downl
 		return nil, fmt.Errorf("error occurred creating new request: %s", err)
 	}
 
-	req.Header.Add("Content-Type", writer.FormDataContentType())
-	req.Header.Add("client-id", addigy.ClientID)
-	req.Header.Add("client-secret", addigy.ClientSecret)
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		// Handle error from client performing HTTP request.
-		return nil, fmt.Errorf("error occurred performing HTTP request: %s", err)
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		// Handler error from reading response.
-		return nil, fmt.Errorf("error occurred reading response body: %s", err)
-	}
-
 	var download *Download
-	err = json.Unmarshal(body, &download)
+	err = addigy.do(req, &download)
 	if err != nil {
-		// Handle error from unmarshalling.
-		return nil, fmt.Errorf("error occurred unmarshalling response body: %s", err)
+		return nil, fmt.Errorf("error occurred performing request: %s", err)
 	}
 
 	return download, nil

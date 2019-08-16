@@ -10,7 +10,8 @@ import (
 
 var clientID = os.Getenv("AddigyClientID")
 var clientSecret = os.Getenv("AddigyClientSecret")
-var client = sdk.NewAddigyClient(clientID, clientSecret)	//todo: pass in realm with os.Getenv("Realm")
+var realm = os.Getenv("AddigyRealm")
+var client = sdk.NewAddigyClient(clientID, clientSecret, realm)
 
 func main() {
 	if len(os.Args) < 2 {
@@ -65,21 +66,17 @@ func handleAlerts() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		//todo create a function called printJson or something that does this for you and call this in all the handlers
-		prettyAlerts, err := json.MarshalIndent(alerts, "", "  ")
+		err = prettyfy(alerts)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyAlerts))
 		os.Exit(0)
 	}
 
 	subcommand.PrintDefaults()
 }
 
-//Jake: The org that we're testing with has a lot of records which causes this to break, we're aware of it but theres nothing we can do right now so just leave it for now
-// Steve: todo "Something went wrong, we are looking into this issue" on some accounts.
 // addigy applications -l
 func handleInstalledApplications() {
 	subcommand := flag.NewFlagSet("applications", flag.ExitOnError)
@@ -96,19 +93,17 @@ func handleInstalledApplications() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		prettyApplications, err := json.MarshalIndent(applications, "", "  ")
+		err = prettyfy(applications)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyApplications))
 		os.Exit(0)
 	}
 
 	subcommand.PrintDefaults()
 }
 
-// todo Bad data? software_icon is an array.		Just use an interface for now
 // addigy public-software -l
 func handlePublicSoftwareItems() {
 	subcommand := flag.NewFlagSet("public-software", flag.ExitOnError)
@@ -125,12 +120,11 @@ func handlePublicSoftwareItems() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		prettySoftware, err := json.MarshalIndent(software, "", "  ")
+		err = prettyfy(software)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettySoftware))
 		os.Exit(0)
 	}
 
@@ -153,7 +147,7 @@ func handleCustomSoftware() {
 
 	// update related flags
 	update := subcommand.Bool("u", false, "Provide -u flag to update an existing software item. Requires -identifier and -version flags. Optionally accepts -installation-script, -condition, and -remove-script flags.")
-	//todo --base-identifier is required, not -identifier
+	// todo --base-identifier is required, not -identifier
 	// shared flags
 	identifier := subcommand.String("identifier", "", "The identifier of a custom software item. This is required for creating a new version of an existing software item.")
 	version := subcommand.String("version", "", "The version of the custom software. This required for both creating new and updating existing software items.")
@@ -166,66 +160,86 @@ func handleCustomSoftware() {
 		os.Exit(1)
 	}
 
-	//todo just have on if *list and check the condition in there
-	if *list && *instructionID == "" {
-		software, err := client.GetCustomSoftware(*identifier)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+	if *list {
+		if *instructionID == "" {
+			software, err := client.GetCustomSoftware(*identifier)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			err = prettyfy(software)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			os.Exit(0)
 		}
-		prettySoftware, err := json.MarshalIndent(software, "", "  ")
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+
+		if *instructionID != "" {
+			software, err := client.GetSpecificCustomSoftware(*instructionID)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			err = prettyfy(software)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			os.Exit(0)
 		}
-		fmt.Println(string(prettySoftware))
-		os.Exit(0)
 	}
 
-	if *list && *instructionID != "" {
-		software, err := client.GetSpecificCustomSoftware(*instructionID)
-		if err != nil {
-			fmt.Println(err)
+	if *create {
+		if *baseIdentifier == "" {
+			fmt.Println("-base-identifier flag is required when creating a custom software.")
 			os.Exit(1)
 		}
-		prettySoftware, err := json.MarshalIndent(software, "", "  ")
-		if err != nil {
-			fmt.Println(err)
+
+		if *version == "" {
+			fmt.Println("-version flag is required when creating a custom software.")
 			os.Exit(1)
 		}
-		fmt.Println(string(prettySoftware))
-		os.Exit(0)
-	}
-	//todo check create first, then check if baseIdentifier and version are not empty, if they are exit with a message saying 'missing x'
-	if *create && *baseIdentifier != "" && *version != "" {
-		software, err := client.CreateCustomSoftware(*baseIdentifier, *version, []sdk.Download{}, *installationScript, *conditionScript, *removeScript)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+
+		if *baseIdentifier != "" && *version != "" {
+			software, err := client.CreateCustomSoftware(*baseIdentifier, *version, []sdk.Download{}, *installationScript, *conditionScript, *removeScript)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			err = prettyfy(software)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			os.Exit(0)
 		}
-		prettySoftware, err := json.MarshalIndent(software, "", "  ")
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		fmt.Println(string(prettySoftware))
-		os.Exit(0)
 	}
 
-	//todo see above comment
-	if *update && *identifier != "" && *version != "" {
-		software, err := client.UpdateCustomSoftware(*identifier, *version, []sdk.Download{}, *installationScript, *conditionScript, *removeScript)
-		if err != nil {
-			fmt.Println(err)
+	if *update {
+		if *identifier == "" {
+			fmt.Println("-identifier flag is required when updating a custom software.")
 			os.Exit(1)
 		}
-		prettySoftware, err := json.MarshalIndent(software, "", "  ")
-		if err != nil {
-			fmt.Println(err)
+
+		if *version == "" {
+			fmt.Println("-version flag is required when updating a custom software.")
 			os.Exit(1)
 		}
-		fmt.Println(string(prettySoftware))
-		os.Exit(0)
+
+		if *identifier != "" && *version != "" {
+			software, err := client.UpdateCustomSoftware(*identifier, *version, []sdk.Download{}, *installationScript, *conditionScript, *removeScript)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			err = prettyfy(software)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			os.Exit(0)
+		}
 	}
 
 	subcommand.PrintDefaults()
@@ -243,35 +257,34 @@ func handleDevices() {
 		os.Exit(1)
 	}
 
-	//todo check list only once
-	if *list && !*online {
-		devices, err := client.GetAllDevices()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+	if *list {
+		if *online {
+			devices, err := client.GetOnlineDevices()
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			err = prettyfy(devices)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			os.Exit(0)
 		}
-		prettyDevices, err := json.MarshalIndent(devices, "", "  ")
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		fmt.Println(string(prettyDevices))
-		os.Exit(0)
-	}
 
-	if *list && *online {
-		devices, err := client.GetOnlineDevices()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		if !*online {
+			devices, err := client.GetAllDevices()
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			err = prettyfy(devices)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			os.Exit(0)
 		}
-		prettyDevices, err := json.MarshalIndent(devices, "", "  ")
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		fmt.Println(string(prettyDevices))
-		os.Exit(0)
 	}
 
 	subcommand.PrintDefaults()
@@ -296,36 +309,56 @@ func handleCommands() {
 	}
 
 	agentIDs := subcommand.Args()
-	//todo check shouldRun and if its true check if cmd != "" and agentids. return error message if they are empty
-	if *shouldRun && *cmd != "" && len(agentIDs) >= 1 {
-		res, err := client.RunCommandOnDevices(agentIDs, *cmd)
-		if err != nil {
-			fmt.Println(err)
+	if *shouldRun {
+		if *cmd == "" {
+			fmt.Println("-cmd flag is required.")
 			os.Exit(1)
 		}
-		prettyRes, err := json.MarshalIndent(res, "", "  ")
-		if err != nil {
-			fmt.Println(err)
+
+		if len(agentIDs) == 0 {
+			fmt.Println("At least 1 agent_id is required as argument.")
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyRes))
-		os.Exit(0)
+
+		if *cmd != "" && len(agentIDs) >= 1 {
+			res, err := client.RunCommandOnDevices(agentIDs, *cmd)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			err = prettyfy(res)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			os.Exit(0)
+		}
 	}
 
-	//todo see above
-	if *shouldGetOutput && *actionID != "" && len(agentIDs) == 1 {
-		res, err := client.GetCommandOutput(*actionID, agentIDs[0])
-		if err != nil {
-			fmt.Println(err)
+	if *shouldGetOutput {
+		if *actionID == "" {
+			fmt.Println("-action-id flag is required.")
 			os.Exit(1)
 		}
-		prettyRes, err := json.MarshalIndent(res, "", "  ")
-		if err != nil {
-			fmt.Println(err)
+
+		if len(agentIDs) != 1 {
+			fmt.Println("A single agent_id is required as an argument.")
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyRes))
-		os.Exit(0)
+
+		if *actionID != "" && len(agentIDs) == 1 {
+			res, err := client.GetCommandOutput(*actionID, agentIDs[0])
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			err = prettyfy(res)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			os.Exit(0)
+		}
 	}
 
 	subcommand.PrintDefaults()
@@ -356,12 +389,11 @@ func handleUpload() {
 			fmt.Println(err)
 			return
 		}
-		prettyDownload, err := json.MarshalIndent(download, "", "  ")
+		err = prettyfy(download)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyDownload))
 		os.Exit(0)
 	}
 
@@ -371,12 +403,11 @@ func handleUpload() {
 			fmt.Println(err)
 			return
 		}
-		prettyDownload, err := json.MarshalIndent(download, "", "  ")
+		err = prettyfy(download)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyDownload))
 		os.Exit(0)
 	}
 
@@ -411,12 +442,11 @@ func handleMaintenance() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		prettyMaintenance, err := json.MarshalIndent(maintenance, "", "  ")
+		err = prettyfy(maintenance)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyMaintenance))
 		os.Exit(0)
 	}
 
@@ -471,12 +501,11 @@ func handlePolicies() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		prettyPolicies, err := json.MarshalIndent(policies, "", "  ")
+		err = prettyfy(policies)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyPolicies))
 		os.Exit(0)
 	}
 
@@ -486,12 +515,11 @@ func handlePolicies() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		prettyPolicy, err := json.MarshalIndent(policy, "", "  ")
+		err = prettyfy(policy)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyPolicy))
 		os.Exit(0)
 	}
 
@@ -501,12 +529,11 @@ func handlePolicies() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		prettyInstructions, err := json.MarshalIndent(instructions, "", "  ")
+		err = prettyfy(instructions)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyInstructions))
 		os.Exit(0)
 	}
 
@@ -516,12 +543,11 @@ func handlePolicies() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		prettyDevices, err := json.MarshalIndent(devices, "", "  ")
+		err = prettyfy(devices)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyDevices))
 		os.Exit(0)
 	}
 
@@ -561,12 +587,11 @@ func handlePolicies() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		prettyInstructions, err := json.MarshalIndent(instructions, "", "  ")
+		err = prettyfy(instructions)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyInstructions))
 		os.Exit(0)
 	}
 
@@ -596,12 +621,11 @@ func handleProfiles() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		prettyProfiles, err := json.MarshalIndent(profiles, "", "  ")
+		err = prettyfy(profiles)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyProfiles))
 		os.Exit(0)
 	}
 
@@ -633,12 +657,11 @@ func handleSystemEvents() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		prettyEvents, err := json.MarshalIndent(events, "", "  ")
+		err = prettyfy(events)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(prettyEvents))
 		os.Exit(0)
 	}
 
@@ -659,4 +682,13 @@ func listSubcommands() {
 		"\npolicies" +
 		"\nprofiles" +
 		"\nsystem-events")
+}
+
+func prettyfy (obj interface{}) error {
+	prettyObjects, err := json.MarshalIndent(obj, "", "  ")
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(prettyObjects))
+	return nil
 }

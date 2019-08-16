@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -26,40 +25,19 @@ type DeviceCommandResponse struct {
 
 // POST api/devices/commands
 func (addigy AddigyClient) RunCommandOnDevices(agentIDs []string, command string) (*DeviceCommandResponse, error) {
-	endpoint := addigy.BaseURL + "/api/devices/commands"
+	url := addigy.buildURL("/api/devices/commands", nil)
 	devicesCommand := DeviceCommand{AgentIDs: agentIDs, Command: command}
 	jsonPayload, _ := json.Marshal(devicesCommand)
-	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonPayload))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		// Handle error from creating new request.
 		return nil, fmt.Errorf("error occurred creating new request: %s", err)
 	}
 
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("client-id", addigy.ClientID)
-	req.Header.Add("client-secret", addigy.ClientSecret)
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		// Handle error from client performing HTTP request.
-		return nil, fmt.Errorf("error occurred performing HTTP request: %s", err)
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		// Handler error from reading response.
-		return nil, fmt.Errorf("error occurred reading response body: %s", err)
-	}
-
-	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("error: %s", string(body[:]))
-	}
-
 	var deviceCommandResponse *DeviceCommandResponse
-	err = json.Unmarshal(body, &deviceCommandResponse)
+	err = addigy.do(req, &deviceCommandResponse)
 	if err != nil {
-		// Handle error from unmarshalling.
-		return nil, fmt.Errorf("error occurred unmarshalling response body: %s", err)
+		return nil, fmt.Errorf("error occurred performing request: %s", err)
 	}
 
 	return deviceCommandResponse, nil
